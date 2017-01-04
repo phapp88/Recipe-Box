@@ -95,7 +95,10 @@ class RecipeModal extends React.Component {
   
   handleClick() {
     this.props.recipeAction(this.props.initialRecipe, this.state.recipe);
-    this.setState({showModal: false});
+    this.setState({
+      recipe: React.addons.update(this.props.initialRecipe, {}),
+      showModal: false
+    });
   }
    
   changeRecipe(formType, text) {

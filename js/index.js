@@ -161,7 +161,10 @@ var RecipeModal = function (_React$Component4) {
 
   RecipeModal.prototype.handleClick = function handleClick() {
     this.props.recipeAction(this.props.initialRecipe, this.state.recipe);
-    this.setState({ showModal: false });
+    this.setState({
+      recipe: React.addons.update(this.props.initialRecipe, {}),
+      showModal: false
+    });
   };
 
   RecipeModal.prototype.changeRecipe = function changeRecipe(formType, text) {
