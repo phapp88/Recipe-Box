@@ -1,0 +1,50 @@
+$panelDivPadding: 12px;
+
+#app {
+  margin: 20px auto;
+  
+  @media (min-width: 800px) {
+    width: 800px;
+  }
+  
+  .recipe { 
+    
+    div {
+      padding: 0;
+      
+      a {  // make entire panel a link
+        display: block;
+        line-height: 40px;
+        padding-left: $panelDivPadding;
+        text-decoration: none;
+      }
+      
+      .panelDiv {
+        h4, .listItem, button {
+          margin-left: $panelDivPadding;
+          margin-right: $panelDivPadding;
+        }
+        
+        h4 {  // 'Ingredients' Header
+          border-bottom: 1px solid #DDDDDD;
+          line-height: 60px;
+          margin-top: 0;
+          text-align: center;
+        }
+    
+        button {  // Delete Button
+          margin-right: 0;
+          margin-bottom: $panelDivPadding;
+        }
+      
+        .modalDiv { // put Delete and Edit Buttons on the same line
+          display: inline-block;
+          
+          button { // Edit Button
+            margin-left: $panelDivPadding / 2;
+          }
+        }
+      }
+    }
+  }
+}

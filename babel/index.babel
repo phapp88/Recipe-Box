@@ -1,0 +1,179 @@
+var Button = ReactBootstrap.Button;
+var ControlLabel = ReactBootstrap.ControlLabel;
+var FormControl = ReactBootstrap.FormControl;
+var FormGroup = ReactBootstrap.FormGroup;
+var ListGroup = ReactBootstrap.ListGroup;
+var ListGroupItem = ReactBootstrap.ListGroupItem;
+var Modal = ReactBootstrap.Modal;
+var Panel = ReactBootstrap.Panel;
+var PanelGroup = ReactBootstrap.PanelGroup;
+
+class Recipe extends React.Component { 
+  handleClick() {
+    this.props.deleteRecipe(this.props.recipe);
+  }
+  
+  render() {
+    return (
+      <div className="panelDiv">
+        <h4>Ingredients</h4>
+        <ListGroup fill>
+          {this.props.recipe.ingredients.map(function(ingredient){
+            return <ListGroupItem className="listItem">{ingredient}</ListGroupItem>;
+          })}
+        </ListGroup>
+        <Button bsStyle="danger" onClick={this.handleClick.bind(this)}>Delete</Button>
+        <RecipeModal recipeAction={this.props.editRecipe} initialRecipe={this.props.recipe} type="Edit Recipe" bsStyle="info" />
+      </div>
+    );
+  }
+}
+
+class RecipeBox extends React.Component {
+  render() {
+    const editRecipe = this.props.editRecipe;
+    const deleteRecipe = this.props.deleteRecipe;
+    let keyCounter = 0;
+    return (
+      <div className="well">
+        <PanelGroup accordion> 
+        {this.props.recipes.map(function(recipe){
+          return (
+            <Panel header={recipe.title} eventKey={++keyCounter} role="button" bsStyle="info" className="recipe">
+              <Recipe recipe={recipe} editRecipe={editRecipe} deleteRecipe={deleteRecipe} />
+            </Panel>
+          );
+          })}
+        </PanelGroup>
+      </div>
+    );
+  }
+}
+
+class ModalForm extends React.Component {
+  handleChange(e) {
+    const text = e.target.value;
+    const formType = e.target.placeholder == 'Recipe Name' ? 'title': 'ingredients';
+    this.props.changeRecipe(formType, text);
+  }
+  
+  render() {
+    return (
+      <form>
+        <FormGroup controlId="formBasicText">
+          <ControlLabel>{this.props.label}</ControlLabel>
+          <FormControl type="text" value={this.props.value} placeholder={this.props.placeholder} onChange={this.handleChange.bind(this)}/>
+        </FormGroup>
+      </form>
+    );
+  }
+}
+
+class RecipeModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      recipe: React.addons.update(this.props.initialRecipe, {}), // creates a deep copy
+      showModal: false
+    };
+    this.close = this.close.bind(this);
+    this.open = this.open.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.changeRecipe = this.changeRecipe.bind(this);
+  }
+  
+  close() {
+    this.setState({
+      recipe: React.addons.update(this.props.initialRecipe, {}),
+      showModal: false
+    })
+  }        
+          
+  open() {
+    this.setState({ showModal: true });
+  }
+  
+  handleClick() {
+    this.props.recipeAction(this.props.initialRecipe, this.state.recipe);
+    this.setState({showModal: false});
+  }
+   
+  changeRecipe(formType, text) {
+    const newRecipe = this.state.recipe;
+    newRecipe[formType] = text.split(',');
+    this.setState({recipe: newRecipe});
+  }
+  
+  render() {
+    const btnText = this.props.type == 'Add Recipe' ? 'Add Recipe': 'Edit';
+    const title = this.props.type == 'Add Recipe' ? 'Add a Recipe': 'Edit Recipe';
+    const ingredientStr = this.state.recipe.ingredients.join(',');
+    return (
+      <div className="modalDiv">
+        <Button bsStyle={this.props.bsStyle} bsSize={this.props.bsSize} onClick={this.open} className="modalBtn">{btnText}</Button>
+        <Modal show={this.state.showModal} onHide={this.close}>
+          <Modal.Header closeButton>
+            <Modal.Title>{title}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <ModalForm label="Recipe" value={this.state.recipe.title} placeholder="Recipe Name" changeRecipe={this.changeRecipe} />
+            <ModalForm label="Ingredients" value={ingredientStr} placeholder="Enter Ingredients,Separated,By Commas" changeRecipe={this.changeRecipe}/>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button bsStyle="primary" onClick={this.handleClick}>{this.props.type}</Button>
+            <Button onClick={this.close}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+      </div>
+    );
+  }
+}
+
+class Layout extends React.Component {
+  constructor() {
+    super();
+    Object.keys(localStorage).forEach(function(key) {
+      if (key != '_phapp88_recipes') {
+        localStorage.removeItem(key);
+      } 
+    });
+    const recipes = JSON.parse(localStorage.getItem('_phapp88_recipes')) == null ? [] : JSON.parse(localStorage.getItem('_phapp88_recipes'));
+    this.state = {
+      recipes: recipes
+    };
+    this.addRecipe = this.addRecipe.bind(this);
+    this.deleteRecipe = this.deleteRecipe.bind(this);
+    this.editRecipe = this.editRecipe.bind(this);
+  }        
+  
+  addRecipe(initialRecipe, recipe) {
+    const newRecipes = this.state.recipes.concat(recipe);
+    localStorage.setItem('_phapp88_recipes', JSON.stringify(newRecipes));
+    this.setState({recipes: newRecipes});
+  }
+  
+  deleteRecipe(recipe) {
+    const newRecipes = this.state.recipes.filter(obj => !_.isEqual(obj, recipe));
+    localStorage.setItem('_phapp88_recipes', JSON.stringify(newRecipes));
+    this.setState({recipes: newRecipes});
+  }
+  
+  editRecipe(initialRecipe, recipe) {
+    const newRecipes = this.state.recipes.map(obj => _.isEqual(obj, initialRecipe) ? recipe : obj);
+    localStorage.setItem('_phapp88_recipes', JSON.stringify(newRecipes));
+    this.setState({recipes: newRecipes});
+  }
+  
+  render() {
+    return (
+      <div>
+        <RecipeBox recipes={this.state.recipes} editRecipe={this.editRecipe} deleteRecipe={this.deleteRecipe} />
+        <RecipeModal recipeAction={this.addRecipe} initialRecipe={{title: '', ingredients: []}} type="Add Recipe" bsSize="large" bsStyle="primary"/>
+      </div>
+    );
+  }
+}
+
+const app = document.getElementById('app');
+
+ReactDOM.render(<Layout />, app);
